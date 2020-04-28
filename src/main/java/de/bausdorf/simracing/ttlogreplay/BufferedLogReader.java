@@ -21,7 +21,6 @@ public class BufferedLogReader extends BufferedReader {
     public String readLine() throws IOException {
         String line = super.readLine();
         line = line.replaceAll("\\\\", "");
-//        line = line.replaceAll("\\$\"", "$");
         return line.substring(0, line.length() -1);
     }
 

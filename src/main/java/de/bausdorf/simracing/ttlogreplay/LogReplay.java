@@ -1,5 +1,7 @@
 package de.bausdorf.simracing.ttlogreplay;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +21,12 @@ public class LogReplay {
     RestTemplate restTemplate;
 
     @Value("${postUrl}")
+    @Setter
+    @Getter
     private String postUrl;
+
+    @Setter
+    private boolean stopOnError;
 
     public LogReplay() {
         restTemplate = new RestTemplate();
@@ -44,6 +51,9 @@ public class LogReplay {
                     log.info("Message sent: " + response.getBody());
                 } catch (Exception e) {
                     log.warn(timedMessage.getMessage().getType().name() + ": " + e.getMessage());
+                    if (stopOnError) {
+                        break;
+                    }
                 }
             }
         } catch (IOException | InterruptedException e) {
