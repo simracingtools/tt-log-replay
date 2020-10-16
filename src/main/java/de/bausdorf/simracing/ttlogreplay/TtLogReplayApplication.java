@@ -11,6 +11,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.List;
 
 @SpringBootApplication
 @Slf4j
@@ -40,6 +41,14 @@ public class TtLogReplayApplication implements ApplicationRunner {
                 log.info("using log timestamps in replay");
             } else {
                 log.info("doing fast replay");
+            }
+            if(args.containsOption("fast")) {
+                List<String> speedFactor = args.getOptionValues("fast");
+                if(!speedFactor.isEmpty()) {
+                    int intFactor = Integer.parseInt(speedFactor.get(0));
+                    log.info("Using speedUp factor " + intFactor);
+                    logReplay.setSpeedUpFactor(intFactor);
+                }
             }
             if (args.containsOption("url")) {
                 if (!args.getOptionValues("url").isEmpty()) {

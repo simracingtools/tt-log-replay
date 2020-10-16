@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -24,9 +26,15 @@ public class LogReplay {
     @Setter
     @Getter
     private String postUrl;
+    @Value("${accessToken}")
+    @Setter
+    @Getter
+    private String accessToken;
 
     @Setter
     private boolean stopOnError;
+    @Setter
+    private int speedUpFactor = 1;
 
     public LogReplay() {
         restTemplate = new RestTemplate();
@@ -40,14 +48,17 @@ public class LogReplay {
                     if( replayStart == null ) {
                         replayStart = timedMessage.getTimestamp();
                     } else {
-                        Duration waitTime = Duration.between(replayStart, timedMessage.getTimestamp());
+                        Duration waitTime = Duration.between(replayStart, timedMessage.getTimestamp()).dividedBy(speedUpFactor);
                         log.info("Sleeping {} sec to replay next message", ((double)waitTime.toMillis()) / 1000);
                         Thread.sleep(waitTime.toMillis());
                         replayStart = timedMessage.getTimestamp();
                     }
                 }
                 try {
-                    ResponseEntity<String> response = restTemplate.postForEntity(postUrl, timedMessage.getMessage(), String.class);
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.add("x-teamtactics-token", accessToken);
+                    HttpEntity<ClientMessage> request = new HttpEntity<>(timedMessage.getMessage(), headers);
+                    ResponseEntity<String> response = restTemplate.postForEntity(postUrl, request, String.class);
                     log.info("Message sent: " + response.getBody());
                 } catch (Exception e) {
                     log.warn(timedMessage.getMessage().getType().name() + ": " + e.getMessage());
